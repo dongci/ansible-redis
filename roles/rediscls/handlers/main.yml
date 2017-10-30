@@ -1,0 +1,6 @@
+---
+- name: restart redisd6379.service
+  service: name=redisd6379.service state=restarted
+
+- name: restart redisd6479.service
+  service: name=redisd6479.service state=restarted

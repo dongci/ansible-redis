@@ -1,0 +1,58 @@
+---
+- name: temporary disable selinux, if selinux is running
+  command: getenforce 0
+  register: sestatus
+  changed_when: false
+  when: ansible_os_family == "RedHat"
+  tags: base
+
+- name: Permanently closed selinux
+  copy: src=selinux.conf dest=/etc/selinux/config owner=root group=root mode=0644
+  when: ansible_os_family == "RedHat"
+  tags: base
+
+- name: Disable firewalld.service
+  service: name=firewalld.service state=stopped enabled=false
+  when: ansible_os_family == "RedHat"
+  tags: base
+
+- name: add hosts file in each node
+  copy: src=hosts dest=/etc/hosts owner=root group=root mode=0644
+  when: ansible_os_family == "RedHat"
+  tags: base
+
+#- name: Record the date, time, and personnel of the history command 
+#  script: ./roles/base/scripts/history.sh
+#  when: ansible_os_family == "RedHat"
+#  tags: base
+
+- name: Record the date, time, and personnel of the history command 
+  copy: src=profile dest=/etc/profile owner=root group=root mode=0644
+  when: ansible_os_family == "RedHat"
+  tags: base
+
+- name: Install Fedoraproject epel.repo
+  yum: name=http://dl.Fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-8.noarch.rpm state=installed
+  when: ansible_os_family == "RedHat"
+  tags: base
+
+- name: Install Base soft ( expect net-tools vim telnet tree iftop htop wget git lrzsz )
+  yum: name={{ item }} state=installed
+  with_items:
+    - expect 
+    - net-tools 
+    - vim 
+    - telnet 
+    - tree 
+    - iftop 
+    - htop 
+    - wget 
+    - git 
+    - lrzsz
+  when: ansible_os_family == "RedHat"
+  tags: base
+
+- name: Install ack tools
+  copy: src=ack dest=/bin/ack owner=root group=root mode=0755
+  when: ansible_os_family == "RedHat"
+  tags: base

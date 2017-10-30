@@ -1,0 +1,14 @@
+daemonize yes
+cluster-enabled yes
+cluster-config-file /data/redis_cluster/6379/redis.conf
+cluster-node-timeout 5000
+dir /data/redis_cluster/6379/dumps/
+appendonly yes
+appendfilename 6379.aof
+cluster-require-full-coverage no
+
+port 6379
+bind {{ bindip }}
+pidfile /var/run/redis_6379.pid
+logfile /data/redis_cluster/6379/logs/redis_6379.log
+protected-mode no

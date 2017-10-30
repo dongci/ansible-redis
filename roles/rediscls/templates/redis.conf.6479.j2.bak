@@ -1,0 +1,47 @@
+#绑定ip，需要个性化
+bind {{ ansible_ens32.ipv4.address }}
+#启用保护模式
+protected-mode yes
+#绑定的服务端口，需要个性化
+port 6479
+tcp-backlog 511
+#日志级别debug # verbose# notice# warning
+loglevel warning
+#redis连接多久不连接就关闭,单位秒,0表示不断开
+timeout 0
+#用于检测连接是否挂死，每多少秒发送一个ack
+#开启集群模式
+cluster-enabled yes
+#运行过程中集群信息保存的文件名，不能冲突，需要个性化
+cluster-config-file /data/redis_cluster/6479/redis.conf
+#集群节点通信内限定的超时时间
+cluster-node-timeout 5000
+#以追加的方式写数据
+appendonly yes
+#在某个主节点挂死的情况下，其他主节点仍然可以工作
+cluster-require-full-coverage no
+
+tcp-keepalive 60
+daemonize yes
+stop-writes-on-bgsave-error no
+rdbcompression no
+#本地文件存储的数据，需要个性化
+dbfilename dump6479.rdb
+#本地数据存储文件dbfilename的目录
+dir /data/redis_cluster/6479/dumps/
+#开启日志文件
+logfile /data/redis_cluster/6479/logs/redis_6479.log
+#pidfile
+pidfile /var/run/redis_6479.pid
+#配置连接数
+maxclients 10000
+#配置使用内存
+maxmemory 3gb
+#内存过期策略
+maxmemory-policy volatile-lru
+#需要个性化
+appendfilename append6479.aof
+appendfsync everysec
+no-appendfsync-on-rewrite no
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb

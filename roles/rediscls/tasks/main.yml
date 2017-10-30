@@ -1,0 +1,144 @@
+---
+- name: Add aliyun-epel-7.repo
+  copy: src=aliyun-epel-7.repo dest=/etc/yum.repos.d/aliyun-epel-7.repo
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: Update yum aliyun-epel-7.repo  
+  shell: yum clean all ;yum makecache 
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: Install Basic tools
+  yum: name={{ item }} state=installed
+  with_items:
+    - gcc
+    - make
+    - ruby
+    - ruby-devel
+    - rubygems
+    - rpm-build
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: wget redis-3.2.6.tar.gz
+#  get_url: url=http://download.redis.io/releases/redis-3.2.6.tar.gz dest=/usr/local/src/
+  copy: src=redis-3.2.6.tar.gz dest=/usr/local/src/redis-3.2.6.tar.gz 
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: tar xzf redis-3.2.6.tar.gz | make | make install
+  shell: >
+    cd /usr/local/src/ && tar xzf redis-3.2.6.tar.gz -C /usr/local/ && \
+    cd ../redis-3.2.6/src/ && make && make install
+  when: ansible_os_family == "RedHat" and "test ! -d /usr/local/redis-3.2.6" 
+  tags: rediscls
+
+- name: Setup /etc/security/limits.conf 
+  copy: src=limits.conf dest=/etc/security/limits.conf owner=root group=root mode=0644
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: creat dumps , logs
+  file: path=/data/redis_cluster/{{ item.name }}/{{ item.dir }} state=directory
+  with_items:
+    - { name: '6379', dir: 'dumps' }
+    - { name: '6379', dir: 'logs' }
+    - { name: '6479', dir: 'dumps' }
+    - { name: '6479', dir: 'logs' }
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: touch pidfile
+  file: path=/var/run/{{ item }} state=touch
+  with_items:
+    - redis_6379.pid
+    - redis_6479.pid
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+#- name: creat dumps , logs | touch pidfile
+#  shell: >
+#    mkdir -p /data/redis_cluster/6379/{dumps,logs} && \
+#    mkdir -p /data/redis_cluster/6479/{dumps,logs} && \
+#    touch /var/run/{redis_6379.pid,redis_6479.pid}
+#  when: ansible_os_family == "RedHat"
+#  tags: rediscls
+
+- name: Configure redis_cluster 
+  template: src={{ item.name }} dest={{ item.conf }} owner=root group=root mode=0644
+  with_items:
+    - { name: 'redis.conf.6379.j2' , conf: '/data/redis_cluster/6379/redis.conf' }
+    - { name: 'redis.conf.6479.j2' , conf: '/data/redis_cluster/6479/redis.conf' }
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: Add redisd6379 startup.sh shutdown.sh script 
+  copy: src={{ item.srva }} dest={{ item.srvas }} owner=root group=root mode=0755
+  with_items:
+    - { srva: 'startup6379.sh'  , srvas: '/data/redis_cluster/6379/startup.sh' }
+    - { srva: 'shutdown6379.sh' , srvas: '/data/redis_cluster/6379/shutdown.sh' }
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: Add redisd6379.service server
+  copy: src={{ item.srvaa }} dest={{ item.srvaas }} owner=root group=root mode=0644
+  with_items:
+    - { srvaa: 'redisd6379.service'  , srvaas: '/usr/lib/systemd/system/redisd6379.service' }
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+  notify:
+    - restart redisd6379.service
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: Add redis6479 startup.sh shutdown.sh script 
+  copy: src={{ item.srvb }} dest={{ item.srvbs }} owner=root group=root mode=0755
+  with_items:
+    - { srvb: 'startup6479.sh'   , srvbs: '/data/redis_cluster/6479/startup.sh' }
+    - { srvb: 'shutdown6479.sh'  , srvbs: '/data/redis_cluster/6479/shutdown.sh' }
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: Set link /usr/local/redis-3.2.6/src/redis-server ==> /usr/bin/redis-server 
+  file: src=/usr/local/redis-3.2.6/src/redis-server dest=/usr/bin/redis-server state=link
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: Add redisd6479.service server
+  copy: src={{ item.srvbb }} dest={{ item.srvbbs }} owner=root group=root mode=0644
+  with_items:
+    - { srvbb: 'redisd6479.service'  , srvbbs: '/usr/lib/systemd/system/redisd6479.service' }
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+  notify:
+    - restart redisd6479.service
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: redisd6379 redisd6479 server now is running
+  service: name={{ item }} enabled=yes state=started
+  with_items:
+    - redisd6379.service
+    - redisd6479.service
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: gem install redis
+  shell: >
+    gem sources --add https://gems.ruby-china.org/ --remove https://rubygems.org/
+    gem install redis
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: Set link /usr/local/redis-3.2.6/src/redis-trib.rb ==> /usr/bin/redis-trib.rb 
+  file: src=/usr/local/redis-3.2.6/src/redis-trib.rb dest=/usr/bin/redis-trib.rb state=link
+  when: ansible_os_family == "RedHat"
+  tags: rediscls
+
+- name: Creat redis cluster
+  shell: echo yes | redis-trib.rb create --replicas 1 
+    10.0.0.101:6379 10.0.0.102:6379 10.0.0.103:6379 10.0.0.101:6479 10.0.0.102:6479 10.0.0.103:6479
+  when: inventory_hostname == groups['rediscls'][0]
+#  when: ansible_hostname== "galera1"
+  tags: rediscls

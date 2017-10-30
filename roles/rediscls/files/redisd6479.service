@@ -1,0 +1,14 @@
+[Unit]  
+Description=redisd6479.service  
+After=network.target network.service 
+   
+[Service]  
+Type=forking  
+PIDFile=/var/run/redis_6479.pid 
+ExecStart=/data/redis_cluster/6479/startup.sh  
+ExecReload=/data/redis_cluster/6479/shutdown.sh && /data/redis_cluster/6479/startup.sh  
+ExecStop=/data/redis_cluster/6479/shutdown.sh  
+PrivateTmp=true  
+   
+[Install]  
+WantedBy=multi-user.target

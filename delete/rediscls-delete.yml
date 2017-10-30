@@ -1,0 +1,34 @@
+---
+- hosts: rediscls
+  remote_user: root
+
+  tasks:
+
+    - name: redisd6379 redisd6479 server now is stop
+      service: name={{ item }} state=stopped
+      with_items:
+        - redisd6379.service
+        - redisd6479.service
+      when: ansible_os_family == "RedHat"
+      tags: rediscls-delete
+
+    - name: rm -rf /data/redis_cluster/6X79/redis_6X79.conf
+      file: path=/data/redis_cluster/{{ item }} state=absent
+      with_items:
+        - 6379/redis_6379.conf
+        - 6479/redis_6479.conf
+
+    - name: rm -rf dumps and logs
+      file: path=/data/redis_cluster/{{ item.name }}/{{ item.names }}  state=absent
+      with_items:
+        - { name: '6379', names: '/dumps/dump6379.rdb' }
+        - { name: '6379', names: '/logs/redis_6379.log' }
+        - { name: '6479', names: '/dumps/dump6479.rdb' }
+        - { name: '6479', names: '/logs/redis_6479.log' }
+
+#  file: {{ item }}
+#  with_items:
+#    - path=/data/redis_cluster/6379/dumps/dump6379.rdb  state=absent
+#    - path=/data/redis_cluster/6379/logs/redis_6379.log state=absent
+#    - path=/data/redis_cluster/6479/dumps/dump6479.rdb  state=absent
+#    - path=/data/redis_cluster/6479/logs/redis_6479.log state=absent

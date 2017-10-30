@@ -1,0 +1,16 @@
+---
+- hosts: all
+  remote_user: root
+  roles:
+    - { role: base, tags: [ 'base' ] }
+
+- hosts: ntps
+  remote_user: root
+  roles:
+    - { role: ntp, tags: [ 'ntp' ] }
+
+- hosts: rediscls
+  remote_user: root
+  roles:
+    - { role: rediscls, tags: [ 'rediscls' ] }
+

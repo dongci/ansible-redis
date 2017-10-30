@@ -1,0 +1,25 @@
+---
+- name: Install NTP server
+  yum: name=chrony state=installed
+  when: ansible_os_family == "RedHat"
+  tags: ntp
+
+- name: Configure controller node NTP server
+  template: src=chrony.conf.server.j2 dest=/etc/chrony.conf  
+    owner=root group=root mode=0644 force=yes
+  when: inventory_hostname in groups['ntpsrv']
+  notify:
+    - restart NTP server
+  tags: ntp
+
+- name: Configure other node NTP client
+  template: src=chrony.conf.client.j2 dest=/etc/chrony.conf
+    owner=root group=root mode=0644 force=yes
+  when: inventory_hostname in groups['ntpclt']
+  notify:
+    - restart NTP server
+  tags: ntp
+
+- name: NTP server now is running
+  service: name=chronyd.service enabled=yes state=started
+  tags: ntp

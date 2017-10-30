@@ -1,0 +1,10 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+#ntp
+10.0.0.100  ntpsrv
+
+#galera-cluster
+10.0.0.101 galera1
+10.0.0.102 galera2
+10.0.0.103 galera3

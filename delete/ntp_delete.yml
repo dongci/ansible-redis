@@ -1,0 +1,16 @@
+---
+- hosts: all
+  remote_user: root
+
+  tasks:
+
+    - name: Remove NTP server
+      yum: name=chrony state=absent
+      when: ansible_os_family == "RedHat"
+      tags: ntp-del
+
+    - name: Rm NTP server file
+      file: path=/etc/chrony.conf state=absent
+      when: inventory_hostname == groups['ntpsrv'] or inventory_hostname == groups['ntpclt']
+      tags: ntp-del
+
